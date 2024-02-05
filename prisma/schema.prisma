@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  role          Roles
+  active        Boolean
+  email         String?    @unique
+  emailVerified DateTime?
+  // accounts      Account[]
+  sessions      Session[]
+  bia           BIA?       @relation(fields: [biaId], references: [id])
+  biaId         String?
+  business      Business?  @relation(fields: [businessId], references: [id])
+  businessId    String?
+  employeesId   String?
+  employees     Employees? @relation(fields: [employeesId], references: [id])
+}
+
+enum Roles {
+  SUPER_ADMIN
+  BIA
+  BUSINESS
+  EMPLOYEE
+}
+
+enum Category {
+  AGRICULTURE_FORESTRY_FISHING_AND_HUNTING
+  MINING_QUARRYING_OIL_GAS_EXTRACTION
+  UTILITIES
+  CONSTRUCTION
+  MANUFACTURING
+  WHOLESALE_TRADE
+  RETAIL_TRADE
+  TRANSPORTATION_WAREHOUSING
+  INFORMATION_CULTURAL_INDUSTRIES
+  FINANCE_INSURANCE
+  REAL_ESTATE_RENTAL_LEASING
+  PROFESSIONAL_SCIENTIFIC_TECHNICAL_SERVICES
+  MANAGEMENT_COMPANIES_ENTERPRISES
+  ADMINISTRATIVE_SUPPORT_WASTE_MANAGEMENT_REMEDIATION_SERVICES
+  EDUCATIONAL_SERVICES
+  HEALTH_CARE_SOCIAL_ASSISTANCE
+  ARTS_ENTERTAINMENT_RECREATION
+  ACCOMMODATION_FOOD_SERVICES
+  OTHER_SERVICES
+  PUBLIC_ADMINISTRATION
+}
+
+model Deal {
+  id               String    @id @default(cuid())
+  title            String
+  description      String?
+  corporatePartner String
+  addresses        Address[]
+}
+
+model Business {
+  id          String      @id @default(cuid())
+  name        String?
+  uniqueId    String?     @unique
+  users       User[]
+  postalCode  String?
+  street1     String?
+  street2     String?
+  category    Category    @default(OTHER_SERVICES)
+  businessId  String?
+  phone       String?
+  bia         BIA?        @relation(fields: [biaId], references: [id])
+  biaId       String?     @default(cuid())
+  addresses   Address[]
+  employees   Employees[]
+  employeesId String?
+  businessID  String?
+}
+
+model Employees {
+  id          String    @id @default(cuid())
+  first_name  String?
+  last_name   String?
+  phone       String?
+  uniqueId    String
+  users       User[]
+  business    Business? @relation(fields: [businessId], references: [id])
+  businessId  String?   @default(cuid())
+  employeesId String?
+}
+
+model BIA {
+  id                String     @id @default(cuid())
+  nameOfBia         String     @unique
+  uniqueId          String?    @unique
+  personOfContact   String
+  emailOfContact    String     @unique
+  phBia             String
+  phPersonOfContact String
+  active            Boolean    @default(true)
+  addresses         Address[]
+  users             User[]
+  biaId             String?
+  businesses        Business[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Address {
+  id         String    @id @default(cuid())
+  postalCode String?
+  province   String
+  city       String
+  street1    String?
+  street2    String?
+  bia        BIA?      @relation(fields: [biaId], references: [id])
+  biaId      String?
+  business   Business? @relation(fields: [businessId], references: [id])
+  businessId String?
+  deal       Deal?     @relation(fields: [dealId], references: [id])
+  dealId     String?
+}
